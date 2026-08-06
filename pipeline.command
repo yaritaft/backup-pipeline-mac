@@ -3,22 +3,23 @@
 # PIPELINE COMPLETO de backup - doble click para ejecutar.
 #
 #   0) Te pide el nombre de la tanda (ej: hasta-06-08-2026) y mueve lo que
-#      haya en ../raw/ hacia ../<nombre>/  (la bandeja de entrada se vacía)
+#      haya en raw/ hacia <nombre>/  (la bandeja de entrada se vacía)
 #   1) Clasifica los archivos en carpetas          (en esta ventana)
 #   2) Filtra fotos/videos sensibles a _sensibles/ (en esta ventana)
 #   3) Comprime imágenes  -> abre su propia ventana de Terminal ┐ en paralelo
 #   4) Comprime videos    -> abre su propia ventana de Terminal ┘
 #
-# Estructura esperada (los scripts viven separados de lo clasificado):
+# Este .command va en la RAÍZ (carpeta madre), al lado de scripts/ y raw/:
 #   carpeta-madre/
-#   ├── scripts/   <- ACÁ está este .command y los .py
-#   ├── raw/       <- tirás la descarga cruda de Image Capture
+#   ├── pipeline.command  <- ACÁ, es lo que clickeás
+#   ├── scripts/          <- los .py y los .command de cada paso
+#   ├── raw/              <- tirás la descarga cruda de Image Capture
 #   ├── <nombre>/            <- lo clasificado (hermano de scripts)
 #   └── <nombre>-compressed/ <- el espejo comprimido (hermano de scripts)
 
 cd "$(dirname "$0")" || exit 1
-SCRIPTS="$(pwd)"                       # .../scripts
-MADRE="$(dirname "$SCRIPTS")"          # carpeta madre (padre de scripts)
+MADRE="$(pwd)"                         # carpeta madre (donde está este .command)
+SCRIPTS="$MADRE/scripts"               # los .py viven acá
 RAW="$MADRE/raw"
 
 echo "=============================================="
@@ -48,7 +49,7 @@ if ! command -v HandBrakeCLI >/dev/null 2>&1 && ! command -v handbrakecli >/dev/
     FALTA=1
 fi
 if ! python3 -c "import nudenet" 2>/dev/null; then
-    echo "ERROR: faltan dependencias de Python (pip3 install -r ../requirements.txt)"
+    echo "ERROR: faltan dependencias de Python (pip3 install -r requirements.txt)"
     FALTA=1
 fi
 if [ "$FALTA" = "1" ]; then

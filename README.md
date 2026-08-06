@@ -17,7 +17,8 @@ en `raw/` y el pipeline crea, al lado de `scripts/`, una carpeta por tanda
 
 ```
 carpeta-madre/                       (ej: /Volumes/T7 Shield/BackupScript)
-├── scripts/                         <- TODOS los .py + .command viven acá
+├── pipeline.command                 <- ACÁ clickeás para correr todo
+├── scripts/                         <- los .py + el .command de cada paso
 ├── raw/                             <- tirás acá la descarga de Image Capture
 ├── hasta-06-08-2026/                <- lo clasificado (hermano de scripts)
 │   ├── fotos_propias/  capturas/  tiktok/  ...
@@ -68,7 +69,7 @@ brew install exiftool handbrake libheif
 pip3 install -r requirements.txt
 
 # Permisos de ejecución para los .command
-chmod +x scripts/*.command
+chmod +x pipeline.command scripts/*.command
 ```
 
 Nota: en Python <= 3.8, `pillow-heif` se compila desde el código fuente y
@@ -83,7 +84,7 @@ cuarentena: click derecho → Abrir → confirmar. Solo la primera vez.
 ### Todo junto (recomendado)
 
 1. Tirá la descarga del iPhone (Image Capture) en `raw/`, al lado de `scripts/`.
-2. Doble click a **`scripts/pipeline.command`**.
+2. Doble click a **`pipeline.command`** (está en la raíz, al lado de `scripts/`).
 3. Te pide el nombre de la tanda (ej: `hasta-06-08-2026`). Mueve lo de `raw/`
    a esa carpeta, clasifica y filtra, después te abre `_sensibles/` en Finder:
    mové lo realmente sensible a `sensibles-revision-humana/` y escribí `s`.
@@ -209,7 +210,8 @@ solo se procesa lo que falta.
 
 ```
 carpeta-madre/
-├── scripts/                             <- los .py + .command (nunca se mezclan)
+├── pipeline.command                     <- lo que clickeás para correr todo
+├── scripts/                             <- los .py + .command de cada paso
 ├── raw/                                 <- vacía después de correr el pipeline
 ├── hasta-06-08-2026/                    <- originales, intactos
 │   ├── fotos_propias/IMG_0001-filtered.HEIC

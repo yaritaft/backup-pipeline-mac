@@ -18,24 +18,30 @@ requirements.txt), cada uno con su `.command` para doble click en macOS, más
 un `pipeline.command` maestro que orquesta todo.
 
 **Estructura en disco (agosto 2026):** los scripts viven separados de lo
-clasificado, en su propia carpeta `scripts/`. La descarga cruda se tira en
-`raw/` (hermano de `scripts/`). El pipeline pide un nombre de tanda, mueve lo
-de `raw/` a `../<nombre>/` (hermano de scripts) y procesa ahí; el espejo cae
-en `../<nombre>-compressed/`. Los `.py` NO cambiaron: ya reciben la carpeta
-como `sys.argv[1]` y calculan el espejo como `origen.parent/<name>-compressed`,
-así que todo el trabajo de rutas vive en los `.command`. Los `.command` hacen
-`SCRIPTS="$(dirname "$0")"`, `MADRE="$(dirname "$SCRIPTS")"`, y le pasan
-`$MADRE/$NOMBRE` a los scripts.
+clasificado. `pipeline.command` (el punto de entrada, lo que se clickea) va en
+la RAÍZ = carpeta madre; los `.py` y los `.command` de cada paso van en
+`scripts/`. La descarga cruda se tira en `raw/` (hermano de `scripts/`). El
+pipeline pide un nombre de tanda, mueve lo de `raw/` a `<madre>/<nombre>/` y
+procesa ahí; el espejo cae en `<madre>/<nombre>-compressed/`. Los `.py` NO
+cambiaron: ya reciben la carpeta como `sys.argv[1]` y calculan el espejo como
+`origen.parent/<name>-compressed`, así que todo el trabajo de rutas vive en los
+`.command`.
+
+Resolución de rutas: `pipeline.command` (en la raíz) hace `MADRE="$(pwd)"`,
+`SCRIPTS="$MADRE/scripts"`. Los `.command` de cada paso (dentro de `scripts/`)
+hacen `SCRIPTS="$(pwd)"`, `MADRE="$(dirname "$SCRIPTS")"`. Todos le pasan
+`$MADRE/$NOMBRE` a los scripts de Python.
 
 ```
 carpeta-madre/           (ej: /Volumes/T7 Shield/BackupScript)
-├── scripts/             <- .py + .command (este repo va acá adentro)
+├── pipeline.command     <- punto de entrada (se clickea acá)
+├── scripts/             <- .py + .command de cada paso
 ├── raw/                 <- bandeja de entrada; el pipeline la vacía
 ├── <nombre>/            <- tanda clasificada (hermano de scripts)
 └── <nombre>-compressed/ <- espejo (hermano de scripts)
 ```
 
-| Archivo (en `scripts/`) | Rol |
+| Archivo | Rol |
 |---------|-----|
 | `clasificar_fotos.py` | Paso 1: mueve archivos a carpetas por origen usando exiftool |
 | `filtrar_sensibles.py` | Paso 2: NudeNet local; mueve detectados a `_sensibles/`, marca limpios con `-filtered` |
