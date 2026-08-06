@@ -17,14 +17,32 @@ Scripts standalone de Python (sin paquetes propios, solo stdlib + deps de
 requirements.txt), cada uno con su `.command` para doble click en macOS, más
 un `pipeline.command` maestro que orquesta todo.
 
-| Archivo | Rol |
+**Estructura en disco (agosto 2026):** los scripts viven separados de lo
+clasificado, en su propia carpeta `scripts/`. La descarga cruda se tira en
+`raw/` (hermano de `scripts/`). El pipeline pide un nombre de tanda, mueve lo
+de `raw/` a `../<nombre>/` (hermano de scripts) y procesa ahí; el espejo cae
+en `../<nombre>-compressed/`. Los `.py` NO cambiaron: ya reciben la carpeta
+como `sys.argv[1]` y calculan el espejo como `origen.parent/<name>-compressed`,
+así que todo el trabajo de rutas vive en los `.command`. Los `.command` hacen
+`SCRIPTS="$(dirname "$0")"`, `MADRE="$(dirname "$SCRIPTS")"`, y le pasan
+`$MADRE/$NOMBRE` a los scripts.
+
+```
+carpeta-madre/           (ej: /Volumes/T7 Shield/BackupScript)
+├── scripts/             <- .py + .command (este repo va acá adentro)
+├── raw/                 <- bandeja de entrada; el pipeline la vacía
+├── <nombre>/            <- tanda clasificada (hermano de scripts)
+└── <nombre>-compressed/ <- espejo (hermano de scripts)
+```
+
+| Archivo (en `scripts/`) | Rol |
 |---------|-----|
 | `clasificar_fotos.py` | Paso 1: mueve archivos a carpetas por origen usando exiftool |
 | `filtrar_sensibles.py` | Paso 2: NudeNet local; mueve detectados a `_sensibles/`, marca limpios con `-filtered` |
 | `devolver_sensibles.py` | Paso 2.5: tras revisión humana, devuelve falsos positivos a su lugar |
 | `comprimir_imagenes.py` | Paso 3: Pillow, calidad 75, espejo en `<carpeta>-compressed/` |
 | `comprimir_videos.py` | Paso 4: HandBrakeCLI, 26RF, audio 160kbps, espejo idem |
-| `pipeline.command` | Orquestador: 1 → 2 → pausa revisión → devolución → (3 ‖ 4 en ventanas de Terminal separadas) |
+| `pipeline.command` | Orquestador: 0 (pide nombre de tanda + vacía `raw/` a `../<nombre>/`) → 1 → 2 → pausa revisión → devolución → (3 ‖ 4 en ventanas de Terminal separadas) |
 
 ## Decisiones de diseño (NO romper sin consultar)
 

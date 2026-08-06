@@ -1,3 +1,6 @@
+# Bandeja de entrada (descarga cruda del iPhone) — nunca al repo
+raw/
+
 # Salidas del pipeline (nunca subir media al repo)
 errors.txt
 _sensibles/

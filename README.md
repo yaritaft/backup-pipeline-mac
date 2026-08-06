@@ -9,11 +9,35 @@ Sucesor para Mac de [backup-scripts](https://github.com/yaritaft/backup-scripts)
 (la versión Windows), con clasificación automática y filtrado de sensibles
 agregados.
 
+## Estructura de carpetas
+
+Los scripts viven separados de lo clasificado. Vos tirás la descarga cruda
+en `raw/` y el pipeline crea, al lado de `scripts/`, una carpeta por tanda
+(con el nombre que le des) más su espejo `-compressed`:
+
+```
+carpeta-madre/                       (ej: /Volumes/T7 Shield/BackupScript)
+├── scripts/                         <- TODOS los .py + .command viven acá
+├── raw/                             <- tirás acá la descarga de Image Capture
+├── hasta-06-08-2026/                <- lo clasificado (hermano de scripts)
+│   ├── fotos_propias/  capturas/  tiktok/  ...
+│   ├── _sensibles/                  <- staging del filtro (auditoría)
+│   └── sensibles-revision-humana/   <- lo apartado a mano (nunca a la nube)
+└── hasta-06-08-2026-compressed/     <- espejo comprimido, listo para la nube
+```
+
+El pipeline te pide el nombre de la tanda, **vacía `raw/` hacia esa carpeta**
+y procesa ahí. Así los scripts nunca se mezclan con las carpetas sueltas de
+lo clasificado.
+
 ## El flujo completo
 
 ```
-Descarga del iPhone (Captura de Imagen / Image Capture, por cable)
+Descarga del iPhone -> raw/  (Captura de Imagen / Image Capture, por cable)
         |
+        v
+0) NOMBRAR ────── el pipeline te pide el nombre de la tanda y mueve
+        |         lo de raw/ hacia esa carpeta
         v
 1) CLASIFICAR ─── mueve cada archivo a su carpeta según su origen
         |         (fotos propias, capturas, tiktok, whatsapp, etc.)
@@ -44,7 +68,7 @@ brew install exiftool handbrake libheif
 pip3 install -r requirements.txt
 
 # Permisos de ejecución para los .command
-chmod +x *.command
+chmod +x scripts/*.command
 ```
 
 Nota: en Python <= 3.8, `pillow-heif` se compila desde el código fuente y
@@ -58,30 +82,33 @@ cuarentena: click derecho → Abrir → confirmar. Solo la primera vez.
 
 ### Todo junto (recomendado)
 
-1. Poné todos los archivos de este repo en la carpeta con las fotos/videos
-   descargados del iPhone.
-2. Doble click a **`pipeline.command`**.
-3. El pipeline clasifica y filtra, después te abre `_sensibles/` en Finder:
+1. Tirá la descarga del iPhone (Image Capture) en `raw/`, al lado de `scripts/`.
+2. Doble click a **`scripts/pipeline.command`**.
+3. Te pide el nombre de la tanda (ej: `hasta-06-08-2026`). Mueve lo de `raw/`
+   a esa carpeta, clasifica y filtra, después te abre `_sensibles/` en Finder:
    mové lo realmente sensible a `sensibles-revision-humana/` y escribí `s`.
    El resto vuelve solo a su carpeta original.
 4. Se abren dos ventanas de Terminal con los compresores en paralelo.
-   Cuando terminan, la carpeta hermana `<carpeta>-compressed/` tiene la
+   Cuando terminan, la carpeta hermana `<nombre>-compressed/` tiene la
    copia lista para la nube.
 
 ### Paso por paso (opcional)
 
-Cada paso tiene su propio `.command` (doble click) o se puede correr por consola:
+Cada paso tiene su propio `.command` (doble click, te pregunta qué tanda
+procesar) o se puede correr por consola pasándole la carpeta de la tanda.
+Desde `scripts/`, esa carpeta es `../<nombre>`:
 
-| Paso | Doble click | Consola |
-|------|-------------|---------|
-| 1. Clasificar | `clasificar.command` | `python3 clasificar_fotos.py . --mover` |
-| 2. Filtrar | `filtrar.command` | `python3 filtrar_sensibles.py .` |
-| 2.5 Devolver post-revisión | (incluido en pipeline) | `python3 devolver_sensibles.py .` |
-| 3. Comprimir imágenes | `comprimir.command` | `python3 comprimir_imagenes.py .` |
-| 4. Comprimir videos | `comprimir_videos.command` | `python3 comprimir_videos.py .` |
+| Paso | Doble click | Consola (desde `scripts/`) |
+|------|-------------|----------------------------|
+| 1. Clasificar | `clasificar.command` | `python3 clasificar_fotos.py ../<nombre> --mover` |
+| 2. Filtrar | `filtrar.command` | `python3 filtrar_sensibles.py ../<nombre>` |
+| 2.5 Devolver post-revisión | (incluido en pipeline) | `python3 devolver_sensibles.py ../<nombre>` |
+| 3. Comprimir imágenes | `comprimir.command` | `python3 comprimir_imagenes.py ../<nombre>` |
+| 4. Comprimir videos | `comprimir_videos.command` | `python3 comprimir_videos.py ../<nombre>` |
 
 El clasificador por consola tiene modo dry-run: sin `--mover` solo muestra
-qué haría.
+qué haría. (El `clasificar.command` también mueve lo de `raw/` a la tanda
+antes de clasificar, igual que el pipeline.)
 
 ## Cómo clasifica (paso 1)
 
@@ -161,9 +188,10 @@ Todo el pipeline es re-ejecutable sin trabajo duplicado:
   mitad de un video, el archivo trunco se descarta solo: escriben a nombre
   temporal y renombran recién al terminar)
 
-Podés cortar cualquier paso con Ctrl+C y retomar después. Cuando bajás una
-tanda nueva de fotos del iPhone a la misma carpeta, corrés el pipeline y
-solo se procesa lo nuevo.
+Podés cortar cualquier paso con Ctrl+C y retomar después. Para una tanda
+nueva, tirás la descarga en `raw/` y corrés el pipeline con un nombre nuevo
+(otra carpeta) o el mismo de antes para sumarlo a esa tanda: en ambos casos
+solo se procesa lo que falta.
 
 ## Consejos operativos
 
@@ -180,18 +208,19 @@ solo se procesa lo nuevo.
 ## Estructura resultante (ejemplo)
 
 ```
-Hasta-06-08-2026/                        <- originales, intactos
-├── fotos_propias/IMG_0001-filtered.HEIC
-├── capturas/IMG_0002-filtered.PNG
-├── tiktok/ ...
-├── _sensibles/movimientos.txt           <- registro/auditoría
-├── sensibles-revision-humana/           <- lo apartado a mano (excluido)
-└── *.py + *.command
-
-Hasta-06-08-2026-compressed/             <- para la nube
-├── fotos_propias/IMG_0001-compressed-75.jpg
-├── capturas/IMG_0002-compressed-75.png
-└── tiktok/ ...
+carpeta-madre/
+├── scripts/                             <- los .py + .command (nunca se mezclan)
+├── raw/                                 <- vacía después de correr el pipeline
+├── hasta-06-08-2026/                    <- originales, intactos
+│   ├── fotos_propias/IMG_0001-filtered.HEIC
+│   ├── capturas/IMG_0002-filtered.PNG
+│   ├── tiktok/ ...
+│   ├── _sensibles/movimientos.txt       <- registro/auditoría
+│   └── sensibles-revision-humana/       <- lo apartado a mano (excluido)
+└── hasta-06-08-2026-compressed/         <- para la nube
+    ├── fotos_propias/IMG_0001-compressed-75.jpg
+    ├── capturas/IMG_0002-compressed-75.png
+    └── tiktok/ ...
 ```
 
 ## Troubleshooting
