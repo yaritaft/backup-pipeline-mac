@@ -1,0 +1,16 @@
+# Pipeline de backup de fotos/videos de iPhone
+# Instalar con:  pip3 install -r requirements.txt
+#
+# Dependencias de sistema (NO van por pip, instalar con Homebrew):
+#   brew install exiftool    -> paso 1 (clasificador)
+#   brew install libheif     -> pasos 2 y 3 (necesaria para compilar pillow-heif en Python <= 3.8)
+#   brew install handbrake   -> paso 4 (compresor de videos)
+
+# Paso 2: filtro de contenido sensible (procesamiento local)
+nudenet
+opencv-python-headless
+
+# Pasos 2 y 3: lectura/compresión de imágenes (Pillow viene como
+# dependencia de nudenet, pero lo fijamos explícito por claridad)
+Pillow
+pillow-heif

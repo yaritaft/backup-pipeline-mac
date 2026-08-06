@@ -1,0 +1,38 @@
+# Salidas del pipeline (nunca subir media al repo)
+errors.txt
+_sensibles/
+sensibles-revision-humana/
+*-compressed/
+
+# Media
+*.jpg
+*.JPG
+*.jpeg
+*.JPEG
+*.png
+*.PNG
+*.heic
+*.HEIC
+*.heif
+*.HEIF
+*.dng
+*.mov
+*.MOV
+*.mp4
+*.MP4
+*.m4v
+*.aae
+*.AAE
+*.dat
+*.DAT
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# macOS
+.DS_Store
+
+# Claude Code (config local)
+.claude/
