@@ -176,7 +176,10 @@ python3 "$SCRIPTS/devolver_sensibles.py" "$DESTINO" || {
 echo ""
 echo "== PASOS 3 y 4: Abriendo dos ventanas de Terminal =="
 
-RUNNER_IMG="/tmp/pipeline-comprimir-imagenes.command"
+# Nombre único por corrida (incluye el PID). La compresión de video es larga;
+# si otra corrida del pipeline usara el mismo /tmp lo pisaría mientras este
+# runner todavía está leyéndose -> "unexpected EOF". Con $$ nunca se pisan.
+RUNNER_IMG="/tmp/pipeline-comprimir-imagenes-$$.command"
 cat > "$RUNNER_IMG" <<EOF
 #!/bin/bash
 cd "$SCRIPTS" || exit 1
@@ -188,7 +191,7 @@ read -r -p "Imágenes: listo. Presioná Enter para cerrar..."
 EOF
 chmod +x "$RUNNER_IMG"
 
-RUNNER_VID="/tmp/pipeline-comprimir-videos.command"
+RUNNER_VID="/tmp/pipeline-comprimir-videos-$$.command"
 cat > "$RUNNER_VID" <<EOF
 #!/bin/bash
 cd "$SCRIPTS" || exit 1
